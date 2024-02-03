@@ -1,0 +1,130 @@
+# Each parameter is overwritten when corresponding command line value is set
+#
+# NOC & WIRED CONFIGURATION
+#
+#
+
+# Supported topologies:
+#   CUSTOM:
+#     topology_args: [specify graph]
+#   CIRCULANT:
+#     topology_args: [nodes count, generators...]
+#   MESH:
+#     topology_args: [width, height]
+#   TORUS:
+#     topology_args: [width, height]
+#   TREE: 
+#     topology_args: [nodes count, subnodes count]
+topology: TORUS
+topology_args: [4, 4]
+topology_channels: 1
+virtual_channels: 1
+
+# Supported subtopologies:
+#   NONE
+#   TREE_RANDOM - random subtree generator
+#   TGEN_0 - test tree generator
+#   TGEN_1 - test tree generator
+#   TGEN_2 - test tree generator
+#   TGEN_3 - test tree generator
+#   TGEN_4 - test tree generator
+#   TGEN_5 - test tree generator
+#   TGEN_6 - test tree generator
+#   TREE - future reserved
+#   RING - future reserved
+#   MESH - future reserved
+subtopology: TGEN_0  
+
+# NONE
+# VIRTUAL
+# PHYSICAL
+subnetwork: PHYSICAL
+
+# update sequence of router relays
+#   DEFAULT - round-robin update
+#   [a, b, c, ...] - custom sequence
+update_sequence: DEFAULT # [0, 1, 2, 3, 4]
+
+# number of flits for each router buffer
+buffer_depth: 2
+
+min_packet_size: 10
+max_packet_size: 10
+flit_injection_rate: true
+scale_with_nodes: false
+packet_injection_rate: 0.05
+probability_of_retransmission: 1
+
+# Routing algorithms:
+#   TABLE_BASED
+#   MESH_XY
+#   SUBNETWORK
+#   FIT_SUBNETWORK
+#   FIXED_SUBNETWORK
+#   VIRTUAL_SUBNETWORK
+#   FIT_VIRTUAL_SUBNETWORK
+#   RING_SPLIT
+#   VIRTUAL_RING_SPLIT
+# Each of the above labels should match a corresponding
+# implementation in the routingAlgorithms source code directory
+routing_algorithm: SUBNETWORK
+
+# Selection Strategies:
+#   RANDOM
+#   BUFFER_LEVEL
+#   KEEP_SPACE
+#   RANDOM_KEEP_SPACE
+# Each of the above labels should match a corresponding
+# implementation in the selectionStrategies source code directory
+selection_strategy: RANDOM
+
+# Default routing table generators:
+#   DIJKSTRA
+#   UP_DOWN
+#   MESH_XY
+#   CIRCULANT_PAIR_EXCHANGE
+#   CIRCULANT_MULTIPLICATIVE
+#   CIRCULANT_CLOCKWISE
+#   CIRCULANT_ADAPTIVE
+#   GREEDY_PROMOTION
+#   just table
+routing_table: DIJKSTRA
+routing_table_id_based: true
+
+# SIMULATION PARAMETERS
+#
+rnd_generator_seed: 0
+report_progress: true
+report_buffers: false
+report_topology_graph: false
+report_topology_graph_adjacency_matrix: false
+report_routing_table: false
+report_possible_routes: false
+report_routes_stats: false
+report_topology_sub_graph: false
+report_topology_sub_graph_adjacency_matrix: false
+report_sub_routing_table: false
+report_cycle_result: false
+report_flit_trace: false
+
+clock_period_ps: 1000
+# duration of reset signal assertion, expressed in cycles
+reset_time: 1000
+# overal simulation lenght, expressed in cycles
+simulation_time: 100000
+# collect stats after a given number of cycles
+stats_warm_up_time: 100
+
+# Traffic distribution:
+#   TRAFFIC_RANDOM
+#   TRAFFIC_HOTSPOT:
+#     traffic_hotspots: [[node_id, send_factor, receive_factor], ...]
+#   TRAFFIC_TABLE_BASED
+traffic_distribution: TRAFFIC_RANDOM
+#traffic_hotspots: [
+#  [34, 2, 2], 
+#  [35, 2, 2], 
+#]
+# when traffic table based is specified, use the following
+# configuration file
+# traffic_table_filename: "t.txt"
