@@ -9,12 +9,12 @@ import matplotlib.ticker as mticker
 config = None
 
 class Config:
-	arg = "routing_algorithm"
+	arg = "topology_args"
 
 	template_path = "config_v1.yml"
 	result_path = f"results/results-{arg}.csv"
 	
-	skip = True
+	skip = False
 	append = False
 	comment = None
 
@@ -55,7 +55,7 @@ class Config:
 		if (Config.arg == "topology_args"):
 			self.start = 4
 			self.end = 25
-			self.step = 1
+			self.step = 2
 		elif (Config.arg == "stats_warm_up_time"):
 			self.start = 100
 			self.end = 2000
@@ -106,18 +106,17 @@ def subplot_results(ax, *features):
 	ax.grid(linestyle = '-', linewidth = 0.5)
 	ax.legend()
 
-
-def plot_results(*keys):
+def plot_all_results(*keys):
 	# create static variables for the subplot_results() function
 	subplot_results.df = pd.read_csv(config.result_path, skiprows=1)
-	subplot_results.df = subplot_results.df[subplot_results.df["routing_algorithm"] != "TABLE_BASED"]
 	subplot_results.x = subplot_results.df[config.arg].to_list()
+	# subplot_results.x = list(map(lambda x: int(x) ** 2, subplot_results.x)) if (config.arg == "topology_args") else subplot_results.x
 
 	fig, axs = plt.subplots(4, 2, sharex=True, sharey=False, figsize=(20, 15))
 	subplot_results(axs[0, 0], *keys[0:3])
-	subplot_results(axs[0, 1], *keys[3:6])
-	subplot_results(axs[1, 0], keys[6])
-	subplot_results(axs[1, 1], keys[7])
+	subplot_results(axs[0, 1], keys[3])
+	subplot_results(axs[1, 0], keys[4])
+	subplot_results(axs[1, 1], keys[5])
 	subplot_results(axs[2, 0], *keys[8:10])
 	subplot_results(axs[2, 1], keys[11])
 	subplot_results(axs[3, 0], *keys[12:14])
@@ -125,12 +124,12 @@ def plot_results(*keys):
 
 	axs[0, 0].set_title("Received flits")
 	axs[0, 0].set(ylabel="flits")
-	axs[0, 1].set_title("Network parameters")
+	axs[0, 1].set_title("Network production")
 	axs[0, 1].set(ylabel="flits/cycle")
-	axs[1, 0].set_title("IP throughput")
-	axs[1, 0].set(ylabel="flits/cycle/IP")
-	axs[1, 1].set_title("Last time flit received")
-	axs[1, 1].set(ylabel="cycles")
+	axs[1, 0].set_title("Network acceptance")
+	axs[1, 0].set(ylabel="flits/cycle")
+	axs[1, 1].set_title("Network throughput")
+	axs[1, 1].set(ylabel="flits/cycles")
 	axs[2, 0].set_title("Max values")
 	axs[2, 0].set(ylabel="cycles")
 	axs[2, 1].set_title("Total flits lost")
@@ -149,6 +148,16 @@ def plot_results(*keys):
 	plt.savefig(f"results/{config.arg}.png")
 	plt.show()
 
+def plot_results():
+	label = "Network throughput (flits/cycle)"
+	fig, ax = plt.subplots()
+	ax.plot(subplot_results.x, subplot_results.df[label], label=label)
+	ax.grid(linestyle = '-', linewidth = 0.5)
+	ax.set_title(label)
+	ax.set(ylabel="flits/cycle", xlabel="Amount of nodes")
+	plt.savefig(f"results/{config.arg}-throughput.png")
+	plt.show()
+
 def run():
 	global config
 	linenum = find_arg()
@@ -157,7 +166,7 @@ def run():
 		edit_line(f"config_v1-{config.arg}-{i}.yml", linenum, f"{config.arg}: {config:{i}}\n")
 		result = os.popen(f"./newxim.exe -config config_v1-{config.arg}-{i}.yml", "r").read()
 		result = re.findall(r"^%.*?:\s*(.*)$", result, re.MULTILINE)
-		result.insert(0, f"{config:{i}}")
+		result.insert(0, f"{i*i}")
 		config.results.loc[len(config.results)] = result
 		os.system(f"rm config_v1-{config.arg}-{i}.yml")
 
@@ -182,6 +191,7 @@ def main():
 	if not config.skip or config.append:
 		run()
 
-	plot_results(*list(config.results.keys()[1:]))
+	plot_all_results(*list(config.results.keys()[1:]))
+	plot_results()
 
 main()
