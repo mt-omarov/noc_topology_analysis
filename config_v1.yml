@@ -1,4 +1,4 @@
-topology: TORUS
+topology: MESH
 topology_args: [4, 4]
 topology_channels: 1
 virtual_channels: 2
@@ -37,5 +37,5 @@ report_flit_trace: false
 clock_period_ps: 1000
 reset_time: 1000
 simulation_time: 10000
-stats_warm_up_time: 100
+stats_warm_up_time: 300
 traffic_distribution: TRAFFIC_RANDOM

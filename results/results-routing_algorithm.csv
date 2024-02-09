@@ -1,6 +1,0 @@
-#routing_algorithm-0-3-1
-routing_algorithm,Total produced flits,Total accepted flits,Total received flits,Network production (flits/cycle),Network acceptance (flits/cycle),Network throughput (flits/cycle),IP throughput (flits/cycle/IP),Last time flit received (cycles),Max buffer stuck delay (cycles),Max time flit in network (cycles),Total received packets,Total flits lost,Global average delay (cycles),Max delay (cycles),Average buffer utilization
-TABLE_BASED,1638182,3222,1709,16.3982,0.0322523,0.0171071,5.91941e-05,861,99899,99980,221,0,73.4845,212,0.390326
-MESH_XY,1638611,1629499,1629123,16.4025,16.3113,16.3075,0.0564275,99899,2420,2734,203643,0,468.093,26303.9,0.153635
-RING_SPLIT,1629936,1623272,1622834,16.3157,16.249,16.2446,0.0562096,99899,3961,4189,202852,0,427.084,18081.2,0.156356
-VIRTUAL_RING_SPLIT,1632637,1621909,1621395,16.3427,16.2353,16.2302,0.0561598,99899,99900,4159,202670,0,519.347,34719.1,0.163755

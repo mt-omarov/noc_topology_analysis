@@ -12,11 +12,17 @@ class Config:
 	arg = "topology_args"
 
 	template_path = "config_v1.yml"
-	result_path = f"results/results-{arg}.csv"
+	result_path = None
 	
-	skip = False
+	skip = True
 	append = False
 	comment = None
+
+	ids = {
+		"topology": None,
+		"routing_algorithm": None,
+		"routing_table": None
+	}
 
 	routing_algs = [
 		"TABLE_BASED",
@@ -53,9 +59,9 @@ class Config:
 
 	def set_params(self):
 		if (Config.arg == "topology_args"):
-			self.start = 4
-			self.end = 25
-			self.step = 2
+			self.start = 2
+			self.end = 40
+			self.step = 1
 		elif (Config.arg == "stats_warm_up_time"):
 			self.start = 100
 			self.end = 2000
@@ -81,6 +87,18 @@ class Config:
 		else:
 			return f"{value}"
 
+def get_args():
+	with open(config.template_path, "r") as f:
+		lines = f.readlines()
+		pattern = r":\s"
+
+		for line in lines:
+			if line == "\n": continue
+			key, value = re.split(pattern, line, maxsplit=1)
+			value = value.strip()
+			if key in config.ids:
+				config.ids[key] = value 
+
 def find_arg():
 	linenum = 0
 	with open(config.template_path, "r") as f:
@@ -98,20 +116,14 @@ def edit_line(filename, linenum, text):
 	out.close()
 
 def subplot_results(ax, *features):
-	i = 1.0
-	for param in features:
+	for i, param in enumerate(features):
 		y = subplot_results.df[param].to_list()
-		ax.plot(subplot_results.x, y, label = param, linewidth = 3.0/i)
-		i += 0.5
+		ax.plot(subplot_results.x, y, label = param, linewidth = 2.5)
+	
 	ax.grid(linestyle = '-', linewidth = 0.5)
 	ax.legend()
 
 def plot_all_results(*keys):
-	# create static variables for the subplot_results() function
-	subplot_results.df = pd.read_csv(config.result_path, skiprows=1)
-	subplot_results.x = subplot_results.df[config.arg].to_list()
-	# subplot_results.x = list(map(lambda x: int(x) ** 2, subplot_results.x)) if (config.arg == "topology_args") else subplot_results.x
-
 	fig, axs = plt.subplots(4, 2, sharex=True, sharey=False, figsize=(20, 15))
 	subplot_results(axs[0, 0], *keys[0:3])
 	subplot_results(axs[0, 1], keys[3])
@@ -145,33 +157,45 @@ def plot_all_results(*keys):
 	plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
 	fig.suptitle(f"{config.arg}")
 	plt.xlabel(f"{config.arg}, i")
-	plt.savefig(f"results/{config.arg}.png")
+	plt.savefig(f"{config.result_path}.png", bbox_inches='tight', dpi=200)
 	plt.show()
 
 def plot_results():
-	label = "Network throughput (flits/cycle)"
+	label = "IP throughput (flits/cycle/IP)"
 	fig, ax = plt.subplots()
-	ax.plot(subplot_results.x, subplot_results.df[label], label=label)
+	
+	if (config.arg == "routing_algorithm"):
+		for i, key in enumerate(subplot_results.x):
+			ax.bar(key, subplot_results.df[label][i], label = key, width = 0.3)
+		ax.set_yscale("log")
+	else:
+		ax.plot(subplot_results.x, subplot_results.df[label], label = label, linewidth = 2.5)
+		ax.legend()
+
 	ax.grid(linestyle = '-', linewidth = 0.5)
 	ax.set_title(label)
-	ax.set(ylabel="flits/cycle", xlabel="Amount of nodes")
-	plt.savefig(f"results/{config.arg}-throughput.png")
+	ax.set(ylabel="flits/cycle", xlabel=config.arg)
+	plt.savefig(f"{config.result_path}-throughput.png", bbox_inches='tight', dpi=175)
 	plt.show()
 
 def run():
 	global config
 	linenum = find_arg()
+	get_args()
 
 	for i in range(config.start, config.end+config.step, config.step):
 		edit_line(f"config_v1-{config.arg}-{i}.yml", linenum, f"{config.arg}: {config:{i}}\n")
 		result = os.popen(f"./newxim.exe -config config_v1-{config.arg}-{i}.yml", "r").read()
 		result = re.findall(r"^%.*?:\s*(.*)$", result, re.MULTILINE)
-		result.insert(0, f"{i*i}")
+		if (config.arg == "topology_args"):
+			result.insert(0, f"{i*i}")
+		else:
+			result.insert(0, f"{config:{i}}")
 		config.results.loc[len(config.results)] = result
 		os.system(f"rm config_v1-{config.arg}-{i}.yml")
 
 	mode = 'a' if config.append else 'w'
-	with open(config.result_path, mode) as f:
+	with open(f"{config.result_path}.csv", mode) as f:
 		if not config.append:
 			f.write(f"{config.comment}\n")
 			config.results.to_csv(f, index=False)
@@ -181,17 +205,24 @@ def run():
 def main():
 	global config
 	config = Config()
-	config.comment = f"#{config.arg}-{config.start}-{config.end}-{config.step}"
+	get_args()
+	config.result_path = f"results/{config.ids['topology']}-{config.arg}-{config.start}-{config.end}-{config.step}"
+	config.comment = f"#{config.ids['topology']}-{config.ids['routing_algorithm']}-{config.ids['routing_table']}-{config.arg}-{config.start}-{config.end}-{config.step}"
 
 	if not os.path.exists("./results/"):
 		os.system("mkdir results")
 	
-	if config.skip and os.path.exists(config.result_path):
-		config.skip = (open(config.result_path, "r").readline().strip("\n") == config.comment)
+	if config.skip and os.path.exists(f"{config.result_path}.csv"):
+		config.skip = (open(f"{config.result_path}.csv", "r").readline().strip("\n") == config.comment)
 	if not config.skip or config.append:
 		run()
 
-	plot_all_results(*list(config.results.keys()[1:]))
+	# create static variables for the subplot_results() function
+	subplot_results.df = pd.read_csv(f"{config.result_path}.csv", skiprows=1)
+	subplot_results.x = subplot_results.df[config.arg].to_list()
+
+	if (config.arg != "routing_algorithm"):
+		plot_all_results(*list(config.results.keys()[1:]))
 	plot_results()
 
 main()
