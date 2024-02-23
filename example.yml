@@ -88,7 +88,7 @@ selection_strategy: RANDOM
 #   CIRCULANT_ADAPTIVE
 #   GREEDY_PROMOTION
 #   just table
-routing_table: DIJKSTRA
+routing_table: MESH_XY
 routing_table_id_based: true
 
 # SIMULATION PARAMETERS
